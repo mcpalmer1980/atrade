@@ -1,0 +1,26 @@
+atrade is an experimental automated algorithmic trading platform
+atrade is a work in progress and not guaranteed in any way
+
+Source Files
+------------
+main.py - main file that is called to start trading platform
+
+common.py - defines global variables and imports common modules
+  
+scanner.py - handles asynchronous market scan and data regression
+
+handlers.py - holds algos that determine act upon current market state
+
+ibx.py - connects to an Interactive Brokers account and trades using ib_insync API
+
+classes.py - holds utility classes
+
+setup.py - install the atrade platform and binds the atrade command to your shell
+
+
+Installation
+------------
+1: Download and extract or clone this repository
+2: Navigate to the installation directory from the command line
+3: Enter the following command: pip3 install .
+
