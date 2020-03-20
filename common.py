@@ -1,3 +1,5 @@
+MAX_LOSS_ALLOWED = 100
+
 import sys, os
 import time
 import datetime
@@ -14,7 +16,6 @@ from scipy import stats
 from classes import *
 
 from collections import OrderedDict
-#import ticks
 import ibx
 
 market_state = None
@@ -39,4 +40,5 @@ exchange_source_dict = {
 
 not_found = 0
 base_url = "https://query1.finance.yahoo.com/v8/finance/chart/"
-ib = ibx.ibx(False, allow_error=True)
+ib = ibx.ibx(allow_error=True, mess='common')
+#ib = ibx.ibx(mess='common')

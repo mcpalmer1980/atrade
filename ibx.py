@@ -181,6 +181,11 @@ class ibx():
             'name': 'confirm',
             'default': True } ]
         return prompt(questions)['confirm']
+
+    def Triage(self):
+        for stock in self.GetStocks():
+            print(stock)
+            self.Sell(stock)
         
     
 @click.group()
@@ -191,7 +196,7 @@ def main():
     use ibx COMMAND --help for details about a sub-command
     """
     global ib
-    ib = ibx()
+    #ib = ibx(mess='ibx main')
 
 @main.command()
 @click.argument('ticker')
@@ -243,11 +248,15 @@ def stocks():
 @main.command()
 def stocks():
     '''List all stocks owned'''
+    df = ib.GetPortfolio()
+    print(df)
+    '''
     df = ib.GetStocksFrame()
     pnl = df.iat[-1, -1]
     cost = df.iat[-1, -2]
     print(df)
     print(f"profit: {pnl}\ncost: {cost}\n{(pnl/cost)*100:0.1f}%")
+    '''
 
 @main.command()
 def start():

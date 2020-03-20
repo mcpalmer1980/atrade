@@ -1,21 +1,10 @@
 #! /usr/bin/env python3
 from common import *
 import common
-import handlers
+import algos
 import scanner
 
-
 running = True
-
-def get_stock_buy_list():
-    if os.getenv('stock_buy'):
-        return os.getenv('stock_buy')
-    else:
-        return ticker_data.get_name(create=True)
-
-
-def GetTime():
-    return datetime.datetime.now().strftime("%H:%M:%S on %m/%d/%Y")
 
 @click.command()
 @click.option('--load', '-l', is_flag=True, help='load data from "dataframe"')
@@ -35,23 +24,18 @@ def main(load, save, interval, timepoints, index, excel):
     first_time = True
     while (running or first_time) and datetime.datetime.now() < market_close:
         first_time = False
-        #get_market_status()
-
+        scanner.print_market_status()
         tickers = ticker_data[index]
-        assert tickers, f'Index {index} not found: exiting'
+        #common.ib.SellAll()
+        ib.Buy('AAPL', 20)
 
-        if load:
-            print('\nLoading saved data from dataframe.sav')
-            df = pd.read_pickle('dataframe.sav')
-            stocks = scanner.ProcessTickerData(df)
-        else:
-            df = scanner.scan_index(tickers, timepoints, interval, save=save)
-            stocks = scanner.ProcessTickerData(df)
+        df = scanner.scan_index(tickers, timepoints, interval, load=load, save=save)
+        stock_frame = scanner.ProcessTickerData(df)
 
-        sectors = scanner.get_sector_slopes(stocks)
-        handlers.launch(stocks, sectors)
+        sector_frame = scanner.get_sector_slopes(stock_frame)
+        algos.launch(stock_frame, sector_frame)
 
-    if excel: scanner.save_xls(df, stocks, sectors)
+    scanner.save_xls(excel, df, stock_frame, sector_frame)
 
 if __name__ == '__main__':
     main()

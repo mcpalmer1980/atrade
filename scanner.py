@@ -40,7 +40,7 @@ async def get_all_prices(tickers):
         results = await asyncio.gather(*tasks)
     return results
 
-def get_market_status():
+def print_market_status():
     'Print change and percent change since previous close for each index in index_tickers'
 
     # generate dictionary for reverse lookup
@@ -55,8 +55,12 @@ def get_market_status():
         print('{}:\t{:+6.2f} / {:.3f}%'.format(index, change, percent))
 
 
-def scan_index(tickers, timepoints = 5, delay = 60, save=False):
+def scan_index(tickers, timepoints = 5, delay = 60, load=None, save=False):
     'get data for tickers list and run time series analysis for x timepoints'
+
+    if load:
+        print('\nLoading saved data from dataframe.sav')
+        return pd.read_pickle('dataframe.sav')
 
     global running
     space = ' ' * 20
@@ -117,7 +121,7 @@ def get_sector_slopes(prices):
     for sector in sorted(prices['sector'].drop_duplicates().dropna()):
         count = len(prices.loc[prices['sector'] == sector])
         pslopes = prices.loc[(prices['sector'] == sector) & (prices['slope'] > 0)]
-        nslopes = prices.loc[(prices['sector'] == sector) & (prices['slope'] > 0)]
+        nslopes = prices.loc[(prices['sector'] == sector) & (prices['slope'] < 0)]
 
         sectors.loc[sector] = {
             'pslope': len(pslopes),
@@ -132,12 +136,13 @@ def get_sector_slopes(prices):
     print(sectors)
     return sectors
 
-def save_xls(long, prices, sectors):
-    print('saving data to market.xlsx')
-    with pd.ExcelWriter('market.xlsx') as writer:  # doctest: +SKIP
-        long.to_excel(writer, sheet_name='long')
-        prices.to_excel(writer, sheet_name='prices')
-        sectors.to_excel(writer, sheet_name='sectors')
+def save_xls(save, long, prices, sectors):
+    if save:
+        print('saving data to market.xlsx')
+        with pd.ExcelWriter('market.xlsx') as writer:  # doctest: +SKIP
+            long.to_excel(writer, sheet_name='long')
+            prices.to_excel(writer, sheet_name='prices')
+            sectors.to_excel(writer, sheet_name='sectors')
 
 def ProcessTickerData(dataframe):
     'Pivot dataframe and append regression info'
@@ -186,46 +191,3 @@ def ProcessTickerData(dataframe):
     results.loc['Average']= results.mean()
     print(results)
     return results
-
-def GetTime():
-    return datetime.datetime.now().strftime("%H:%M:%S on %m/%d/%Y")
-
-@click.command()
-@click.option('--load', '-l', is_flag=True, help='load data from "dataframe"')
-@click.option('--save', '-s', is_flag=True, help='save data to "dataframe"')
-@click.option('--interval', '-I', default=60, help='delay between timepoints')
-@click.option('--timepoints', '-t', default=5, help='timepoints to use for regression')
-@click.option('--index', '-i', default='sp500', help='index or ticker list to scan: def=sp500')
-@click.option('--excel', '-x', is_flag=True, help='save data to dataframe.xls')
-def main(load, save, interval, timepoints, index, excel):
-    'Main status command'
-
-    print('Market Status by Christopher M Palmieri')
-    ib.Connect(allow_error=True)
-    #market_close = datetime.datetime.now().replace(hour=16, minute=0)
-    market_close = datetime.datetime.now().replace(hour=23, minute=59)
-
-    running = False if load else True
-    first_time = True
-    while (running or first_time) and datetime.datetime.now() < market_close:
-        first_time = False
-        #get_market_status()
-
-        tickers = ticker_data[index]
-        assert tickers, f'Index {index} not found: exiting'
-
-        if load:
-            print('\nLoading saved data from dataframe.sav')
-            df = pd.read_pickle('dataframe.sav')
-            stocks = ProcessTickerData(df)
-        else:
-            df = scan_index(tickers, timepoints, interval, save=save)
-            stocks = ProcessTickerData(df)
-
-        sectors = get_sector_slopes(stocks)
-        handlers.launch(stocks, sectors)
-
-    if excel: save_xls(df, stocks, sectors)
-
-if __name__ == '__main__':
-    main()

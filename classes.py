@@ -6,10 +6,14 @@ exchange_source_dict = {
     'amex': 'https://old.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=amex&render=download',    
     'nyse': 'https://old.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=download'} 
 
+def GetTime():
+    return datetime.datetime.now().strftime("%H:%M:%S on %m/%d/%Y")
+
 class TickerData():
     """
-    Maintans a list of ticker lists
-    Defaults to 'tickers.dat'
+    Maintains a list of manually generated ticker lists
+    Can return ticker lists from dow, nasdaq, or sp500 index
+    Defaults to 'tickers.dat' for manual lists
     Stores each list as one line in a tab seperated text file
     The list's descriptive title is stored in column 1
     """
@@ -17,7 +21,7 @@ class TickerData():
     def __init__(self, filename = 'tickers.dat', silent=False):
         """
         Initialize ticker lists
-        try to load from filename (def = tickers.dat)
+        Try to load from filename (def = tickers.dat)
         """
         self.indexes = {
             'dow': IndexList.tickers_dow,
@@ -50,7 +54,7 @@ class TickerData():
         elif index in self.ticker_lists:
             return self.ticker_lists[index]
         else:
-            return []
+            assert False, f'Index {index} not found: exiting'
     def __exit__(self):
         self.Save()
 
